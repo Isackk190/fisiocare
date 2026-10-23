@@ -71,7 +71,7 @@ if(!S.exercises) S.exercises=EX0;
 if(!S.profile||!S.profile.documento) S.profile=base().profile;
 const save=()=>localStorage.setItem(KEY,JSON.stringify(S));
 const clock=sec=>Math.floor(sec/60)+":"+String(sec%60).padStart(2,"0");
-const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&","<":"<",">":">","\"":""","'":"&#39;"}[c]));
+function esc(s){return String(s).replace(/[&<>"']/g,function(c){return "&#"+c.charCodeAt(0)+";";});}
 const el=html=>{document.getElementById("app").innerHTML=html;};
 function go(patch){Object.assign(S,patch);save();draw();}
 function draw(){
