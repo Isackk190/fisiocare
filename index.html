@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Fisiocare</title>
+<style>
+:root{--blue:#2f7de1;--ink:#16324f;--muted:#5d738a;--bg:#f4f7fb;--line:#e3ebf3;--mint:#1f9d6a;--mintbg:#e7f7ef;--coral:#d4534a;--coralbg:#fdeceb;--sky:#e8f2fc}
+*{box-sizing:border-box}body{margin:0;font-family:"Segoe UI",sans-serif;background:var(--bg);color:var(--ink)}
+button,input{font:inherit}button{cursor:pointer}
+.phone{max-width:430px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column}
+header,.splash{background:var(--blue);color:#fff;padding:16px}
+header{display:flex;justify-content:space-between;align-items:center}
+main{flex:1;padding:16px}
+nav{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--line);background:#fff}
+nav button{border:0;background:transparent;padding:12px 4px;color:var(--muted);font-weight:700;font-size:12px}
+nav button.on{color:var(--blue)}
+h1{margin:0 0 12px;font-size:24px}
+.card{background:#fff;border:1px solid var(--line);border-radius:18px;padding:14px;margin-bottom:12px}
+.btn{width:100%;border:0;border-radius:16px;padding:12px;font-weight:800;margin-top:8px}
+.primary{background:var(--blue);color:#fff}.mint{background:var(--mint);color:#fff}
+.ghost{background:var(--sky);color:var(--blue);border:1px solid var(--blue)}
+.plain{background:#fff;border:1px solid var(--line);text-align:left}
+.danger{background:#fff;color:var(--coral);border:1px solid var(--coral)}
+label{display:block;font-size:14px;font-weight:700;margin-top:8px}
+input[type=text],input[type=password]{width:100%;margin-top:4px;padding:12px;border-radius:12px;border:1px solid var(--line)}
+.chip{display:inline-block;background:var(--sky);color:var(--blue);border-radius:999px;padding:4px 10px;font-size:13px;font-weight:700;margin:0 6px 6px 0}
+.note{background:var(--mintbg);color:var(--mint);border-radius:14px;padding:10px;font-weight:700;font-size:14px}
+.alert{background:var(--coralbg);color:var(--coral);border-radius:14px;padding:12px;font-weight:700}
+.row{display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px solid var(--line);font-size:14px}
+.splash{min-height:100vh;display:flex;align-items:center;justify-content:center;border:0;width:100%;font-size:48px;font-weight:800}
+.overlay{position:fixed;inset:0;background:var(--blue);color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9}
+.fig{width:100%;height:150px;background:var(--sky);border-radius:16px;display:block}
+.muted{color:var(--muted);font-size:14px}
+</style>
+</head>
+<body>
+<div class="phone" id="app"></div>
+<script>
+const KEY="fisiocare-html-v2";
+const FIG={
+rot:`<svg class="fig" viewBox="0 0 200 120"><rect width="200" height="120" fill="#e8f2fc"/><circle cx="70" cy="28" r="12" fill="#2f7de1"/><path d="M70 40 v36 M70 58 h34 l18-22" fill="none" stroke="#16324f" stroke-width="6" stroke-linecap="round"/></svg>`,
+up:`<svg class="fig" viewBox="0 0 200 120"><rect width="200" height="120" fill="#e8f2fc"/><circle cx="90" cy="24" r="12" fill="#2f7de1"/><path d="M90 36 v40 M90 50 l40-28" fill="none" stroke="#16324f" stroke-width="6" stroke-linecap="round"/></svg>`,
+row:`<svg class="fig" viewBox="0 0 200 120"><rect width="200" height="120" fill="#e8f2fc"/><circle cx="60" cy="30" r="12" fill="#2f7de1"/><path d="M60 42 v40 M60 58 h40 l16-18" fill="none" stroke="#16324f" stroke-width="6" stroke-linecap="round"/></svg>`,
+wall:`<svg class="fig" viewBox="0 0 200 120"><rect width="200" height="120" fill="#e8f2fc"/><rect x="150" y="10" width="14" height="100" fill="#9bb6d4"/><circle cx="70" cy="40" r="12" fill="#2f7de1"/><path d="M70 52 l50 8" fill="none" stroke="#16324f" stroke-width="6" stroke-linecap="round"/></svg>`,
+curl:`<svg class="fig" viewBox="0 0 200 120"><rect width="200" height="120" fill="#e8f2fc"/><circle cx="80" cy="26" r="12" fill="#2f7de1"/><path d="M80 38 v28 l28-20" fill="none" stroke="#16324f" stroke-width="6" stroke-linecap="round"/></svg>`
+};
+const EX0=[
+{name:"Rotación externa con banda",dose:"3 × 12",cue:"Codo pegado al cuerpo a 90°.",fig:"rot"},
+{name:"Rotación interna con banda",dose:"3 × 12",cue:"Lleva el antebrazo hacia el abdomen.",fig:"rot"},
+{name:"Elevación en plano escapular",dose:"3 × 12",cue:"Pulgar arriba, hasta la altura del hombro.",fig:"up"},
+{name:"Remo con banda",dose:"3 × 12",cue:"Junta las escápulas sin arquear la espalda.",fig:"row"},
+{name:"Flexión en pared con plus",dose:"3 × 8",cue:"Empuja la pared y separa las escápulas al final.",fig:"wall"},
+{name:"Flexión de codo con banda",dose:"3 × 12",cue:"Codo pegado, sube y baja con control.",fig:"curl"}
+];
+const FIELDS=[
+["nombre","Nombre"],["documento","Documento"],["sexo","Sexo"],["nacimiento","Nacimiento"],["edad","Edad"],
+["ocupacion","Ocupación"],["municipio","Municipio"],["direccion","Dirección"],["telefono","Teléfono"],
+["correo","Correo"],["acudiente","Contacto de emergencia"],["telAcudiente","Teléfono de emergencia"],
+["eps","EPS"],["diagnostico","Diagnóstico"]
+];
+const base=()=>({
+role:null,screen:"splash",tab:"home",
+appointment:{date:"Viernes 23 oct",time:"3:00 p.m.",type:"Control de hombro",place:"Consultorio",note:"Revisar dolor en rotación externa"},
+phase:3,exercises:EX0,pains:{},done:[],started:null,active:null,celebrate:false,
+last:null,painAvg:3,adherence:80,sessionsDone:2,sessionsGoal:3,
+profile:{nombre:"Mariana Galvis Agudelo",documento:"103597001",sexo:"Femenino",nacimiento:"05 de diciembre de 2010",edad:"15 años",ocupacion:"Estudiante y porrismo",municipio:"Itagüí",direccion:"Envigado",telefono:"301 659 1583",correo:"Marianagalvis512@gamil.com",acudiente:"Sandra Agudelo (madre)",telAcudiente:"301 213 1391",eps:"Sura · contributivo",diagnostico:"Subluxación glenohumeral derecha · S43.0"}
+});
+let S=JSON.parse(localStorage.getItem(KEY)||"null")||base();
+if(!S.exercises) S.exercises=EX0;
+if(!S.profile||!S.profile.documento) S.profile=base().profile;
+const save=()=>localStorage.setItem(KEY,JSON.stringify(S));
+const clock=sec=>Math.floor(sec/60)+":"+String(sec%60).padStart(2,"0");
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&","<":"<",">":">","\"":""","'":"&#39;"}[c]));
+const el=html=>{document.getElementById("app").innerHTML=html;};
+function go(patch){Object.assign(S,patch);save();draw();}
+function draw(){
+  if(S.screen==="splash"){el('<button class="splash" onclick="go({screen:\'login\'})">Fisiocare</button>');return;}
+  if(!S.role){
+    el(`<main><h1 style="color:var(--blue)">Fisiocare</h1><p class="muted">Entra con tu usuario.</p>
+      <label>Usuario<input id="u" type="text"></label><label>Contraseña<input id="p" type="password"></label>
+      <p id="err" class="alert" style="display:none"></p>
+      <button class="btn primary" onclick="login()">Entrar</button></main>`);
+    return;
+  }
+  const tabs=S.role==="physio"?[["home","Inicio"],["ficha","Ficha"],["citas","Citas"],["rutina","Rutina"]]:[["home","Inicio"],["rutina","Ejercicios"],["progreso","Progreso"],["perfil","Perfil"]];
+  let body=S.role==="patient"&&S.celebrate?`<div class="overlay"><p>Completado</p><p style="font-size:24px">Felicitaciones</p></div>`:S.role==="physio"?physio():patient();
+  el(`<header><div><div style="font-size:12px;opacity:.8">Fisiocare</div><b>${S.role==="physio"?"Fisioterapeuta":esc(S.profile.nombre)}</b></div>
+    <button class="btn" style="width:auto;background:rgba(255,255,255,.2);color:#fff" onclick="go({role:null,screen:'login',tab:'home',active:null})">Salir</button></header>
+    <main>${body}</main>
+    <nav>${tabs.map(([id,label])=>`<button class="${S.tab===id?"on":""}" onclick="go({tab:'${id}',active:null})">${label}</button>`).join("")}</nav>`);
+}
+function login(){
+  const u=document.getElementById("u").value.trim().toLowerCase();
+  const p=document.getElementById("p").value;
+  if(u==="mariana"&&p==="hombro15") go({role:"patient",tab:"home"});
+  else if(u==="fisio"&&p==="cuidado15") go({role:"physio",tab:"home"});
+  else {const e=document.getElementById("err");e.style.display="block";e.textContent="Usuario o contraseña incorrectos.";}
+}
+function chips(){return `<div><span class="chip">Fase ${S.phase}</span><span class="chip">Adherencia ${S.adherence}%</span><span class="chip">Dolor ${S.painAvg}/10</span><span class="chip">${S.sessionsDone}/${S.sessionsGoal} sesiones</span></div>`;}
+function report(){
+  if(!S.last) return "";
+  return `<div class="card"><b>Última rutina de Mariana</b><p class="muted">Duración ${clock(S.last.seconds)} · promedio ${S.last.avg}/10</p>
+    ${S.last.items.map(i=>`<div class="row"><span>${esc(i.name)}</span><b>${i.pain}/10</b></div>`).join("")}</div>`;
+}
+function physio(){
+  if(S.tab==="citas") return `<h1>Citas</h1><p class="note">Al guardar, Mariana ve esta cita.</p>
+    <label>Fecha<input id="d" type="text" value="${esc(S.appointment.date)}"></label>
+    <label>Hora<input id="t" type="text" value="${esc(S.appointment.time)}"></label>
+    <label>Tipo<input id="ty" type="text" value="${esc(S.appointment.type)}"></label>
+    <label>Lugar<input id="pl" type="text" value="${esc(S.appointment.place)}"></label>
+    <label>Nota<input id="nt" type="text" value="${esc(S.appointment.note)}"></label>
+    <button class="btn primary" onclick="saveCita()">Guardar y enviar a la paciente</button>`;
+  if(S.tab==="rutina") return `<h1>Editar rutina</h1>
+    ${[1,2,3,4].map(n=>`<button class="btn ${S.phase===n?"primary":"plain"}" onclick="go({phase:${n}})">Fase ${n}</button>`).join("")}
+    ${S.exercises.map((e,i)=>`<div class="card">${FIG[e.fig]||FIG.up}<b>${esc(e.name)}</b><p class="muted">${esc(e.dose)} · ${esc(e.cue)}</p>
+      <button class="btn danger" onclick="S.exercises.splice(${i},1);save();draw()">Quitar</button></div>`).join("")}
+    <h1>Añadir ejercicio</h1>
+    <label>Nombre<input id="nn" type="text"></label>
+    <label>Series y repeticiones<input id="nd" type="text" value="3 × 10"></label>
+    <label>Indicación<input id="nc" type="text" value="Detener si el dolor es mayor a 5/10."></label>
+    <button class="btn mint" onclick="addEx()">Agregar y publicar</button>
+    <p class="note">Mariana lo ve al instante en Mis ejercicios.</p>`;
+  if(S.tab==="ficha") return `<h1>Ficha · ${esc(S.profile.nombre)}</h1>${chips()}${report()}
+    <div class="card">${FIELDS.map(([k,lab])=>`<div class="row"><span>${lab}</span><b>${esc(S.profile[k]||"")}</b></div>`).join("")}</div>`;
+  const alert=S.last&&S.last.peak>5?`<div class="alert">Última rutina: dolor ${S.last.peak}/10 en ${esc(S.last.peakName)}. Promedio ${S.last.avg}/10.</div>`:"";
+  return `<h1>Hola</h1>${alert}<div class="card"><b>Cita</b><p>${esc(S.profile.nombre)} · ${esc(S.appointment.date)} · ${esc(S.appointment.time)}</p><p class="muted">${esc(S.appointment.type)} · ${esc(S.appointment.place)}</p></div>${chips()}${report()}`;
+}
+function saveCita(){
+  S.appointment.date=document.getElementById("d").value;
+  S.appointment.time=document.getElementById("t").value;
+  S.appointment.type=document.getElementById("ty").value;
+  S.appointment.place=document.getElementById("pl").value;
+  S.appointment.note=document.getElementById("nt").value;
+  go({tab:"home"});
+}
+function addEx(){
+  const name=document.getElementById("nn").value.trim();
+  if(!name) return;
+  S.exercises.push({name,dose:document.getElementById("nd").value,cue:document.getElementById("nc").value,fig:"up"});
+  go({tab:"rutina"});
+}
+function patient(){
+  if(S.active==="resumen"){
+    const items=S.exercises.map((e,i)=>({name:e.name,pain:S.pains[i]}));
+    const nums=items.filter(i=>i.pain!==undefined);
+    const avg=nums.length?Math.round(nums.reduce((a,b)=>a+b.pain,0)/nums.length):0;
+    return `<h1>Rutina completa</h1><p class="note">Tiempo ${clock(Math.floor((Date.now()-(S.started||Date.now()))/1000))}</p>
+      ${items.map(i=>`<div class="row"><span>${esc(i.name)}</span><b>${i.pain??"—"}/10</b></div>`).join("")}
+      <p class="note">Promedio: ${avg}/10</p>
+      <button class="btn primary" onclick="finish(${avg})">Listo</button>`;
+  }
+  if(S.active!==null&&S.active!=="resumen"){
+    const i=S.active,e=S.exercises[i];
+    if(!e){S.active=null;return patient();}
+    return `${FIG[e.fig]||FIG.up}<h1>${esc(e.name)}</h1><p class="note">${esc(e.cue)} · ${esc(e.dose)}</p>
+      <label>Dolor de este ejercicio: <b id="pv">${S.pains[i]??3}</b>/10
+      <input id="pain" type="range" min="0" max="10" value="${S.pains[i]??3}" oninput="pv.textContent=this.value"></label>
+      <button class="btn ghost" onclick="S.pains[${i}]=+pain.value;save();draw()">Guardar cambios</button>
+      <button class="btn primary" onclick="completeSerie(${i})">Completé la serie</button>`;
+  }
+  if(S.tab==="rutina") return `<h1>Mis ejercicios</h1><p class="note">Publicados por tu fisioterapeuta. Fase ${S.phase}.</p>
+    ${S.exercises.map((e,i)=>`<button class="btn plain" onclick="if(!S.started)S.started=Date.now();go({active:${i}})">${FIG[e.fig]||FIG.up}<b>${esc(e.name)}</b><br><span class="muted">${esc(e.dose)} · ${esc(e.cue)}${S.done.includes(i)?" · listo "+S.pains[i]+"/10":""}</span></button>`).join("")}`;
+  if(S.tab==="progreso") return `<h1>Mi progreso</h1>${chips()}${S.last?`<p class="note">Última rutina: ${clock(S.last.seconds)}</p>${S.last.items.map(i=>`<div class="row"><span>${esc(i.name)}</span><b>${i.pain}/10</b></div>`).join("")}`:""}`;
+  if(S.tab==="perfil"){
+    if(S.editing) return `<h1>Editar perfil</h1>${FIELDS.map(([k,lab])=>`<label>${lab}<input id="f_${k}" type="text" value="${esc(S.profile[k]||"")}"></label>`).join("")}
+      <button class="btn primary" onclick="saveProfile()">Guardar cambios</button>
+      <button class="btn plain" onclick="go({editing:false})">Cancelar</button>`;
+    return `<h1>Mi perfil</h1><button class="btn ghost" onclick="go({editing:true})">Editar</button>
+      <div class="card">${FIELDS.map(([k,lab])=>`<div class="row"><span>${lab}</span><b>${esc(S.profile[k]||"")}</b></div>`).join("")}</div>`;
+  }
+  return `<h1>Hola, ${esc(S.profile.nombre.split(" ")[0])}</h1>
+    <div class="card"><b>Próxima cita</b><p>${esc(S.appointment.date)} · ${esc(S.appointment.time)}</p><p class="muted">${esc(S.appointment.type)} · ${esc(S.appointment.place)}</p><p class="muted">${esc(S.appointment.note)}</p></div>
+    ${chips()}<p class="muted">${S.exercises.length} ejercicios en la rutina</p>
+    <button class="btn primary" onclick="go({tab:'rutina',started:S.started||Date.now(),pains:S.started?S.pains:{},done:S.started?S.done:[]})">Comenzar</button>`;
+}
+function saveProfile(){FIELDS.forEach(([k])=>{S.profile[k]=document.getElementById("f_"+k).value;});go({editing:false});}
+function completeSerie(i){
+  const pain=+document.getElementById("pain").value;
+  S.pains[i]=pain;
+  if(!S.done.includes(i)) S.done.push(i);
+  S.celebrate=true;save();draw();
+  setTimeout(()=>{const next=S.exercises.findIndex((_,n)=>!S.done.includes(n));S.celebrate=false;S.active=next===-1?"resumen":next;save();draw();},2500);
+}
+function finish(avg){
+  const seconds=Math.max(1,Math.round((Date.now()-(S.started||Date.now()))/1000));
+  const items=S.exercises.map((e,i)=>({name:e.name,pain:S.pains[i]??0}));
+  const peakItem=items.reduce((a,b)=>b.pain>a.pain?b:a,items[0]||{pain:0,name:""});
+  S.last={seconds,avg,items,peak:peakItem.pain,peakName:peakItem.name};
+  S.painAvg=avg;S.sessionsDone=Math.min(S.sessionsGoal,S.sessionsDone+1);
+  S.adherence=Math.round(S.sessionsDone/S.sessionsGoal*100);
+  S.started=null;S.done=[];S.pains={};S.active=null;S.tab="progreso";save();draw();
+}
+draw();
+</script>
+</body>
+</html>
